@@ -1,6 +1,6 @@
 # Smath-Printers
 
-<img width="256" height="256" alt="smath_printers_logo" src="https://github.com/mguihard77/Smath-Printers/blob/main/smath_printers_logo.png" />
+<img width="256" height="256" alt="smath_printers_logo" src="https://github.com/mguihard77/Smath-Printers/blob/main/docs/smath_printers_logo.png" />
 
 Smath Printers is a Powershell based utility to easily deploy printers in your domain.
 
@@ -39,6 +39,26 @@ No registry cleanup, no print spooler manipulation, no state detection.
 
 ---
 
+## Project Structure
+
+Smath-Printers/
+├─ smath_printers.ps1        # Main PowerShell script
+├─ smath_printers.exe        # Compiled executable (optional)
+├─ config.csv                # Printer configuration file
+│
+├─ lang/                     # Language files
+│  ├─ en.lang.ps1            # English
+│  ├─ fr.lang.ps1            # French
+│  ├─ de.lang.ps1            # German
+│  └─ es.lang.ps1            # Spanish
+│
+├─ docs/
+│  └─ smath_printers_logo.png
+│
+├─ README.md
+└─ LICENSE
+
+---
 
 ## CSV configuration
 

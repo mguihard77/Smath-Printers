@@ -39,13 +39,39 @@ No registry cleanup, no print spooler manipulation, no state detection.
 
 ---
 
+
 ## CSV configuration
 
-Printers are fully defined using a single CSV file named `config.csv`, placed next to the script or executable.
+All behavior is driven by a single CSV file named `config.csv`, placed next to the script or executable.
 
-### Example `config.csv`
+The CSV defines **both printer removals and printer installations**.
+
+---
+
+## Removal rules (REMOVE)
+
+Printers can be removed explicitly using the `REMOVE` section of the CSV.
+
+Removal rules are applied **before any installation**, and behave exactly like the original script logic.
+
+### Supported removal modes
+
+| Mode | Description |
+|------|-------------|
+| `PREFIX` | Removes all printers whose name starts with the given value |
+| `EXACT`  | Removes a printer matching the exact name |
+
+Associated TCP/IP ports (`IP_*`) are also removed.
+
+---
+
+## Example CSV File
 
 ```csv
+Section,Mode,Value,Name,IP,Port,Driver,InfPath,Type
+REMOVE,PREFIX,Office-Printer_,,,,,,
+REMOVE,EXACT,Old_Printer_Name,,,,,,
+
 Name,IP,Port,Driver,InfPath,Type
 Office_Printer_1,192.168.1.10,IP_192.168.1.10,Xerox Global Print Driver PCL6,"\\server\drivers\xerox\driver.inf",Xerox
 Secure_Print,127.0.0.1,IP_127.0.0.1,Xerox Global Print Driver PCL6,,Print2Me
@@ -89,10 +115,11 @@ When compiled as an executable, config.csv must be located in the same directory
 ## Permissions
 
 Smath-Printers is designed to run without administrator privileges in standard deployment scenarios.
+
 The script:
 
-does not restart the print spooler
-does not modify the Windows registry
-does not perform system-level cleanup
+- does not restart the print spooler
+- does not modify the Windows registry
+- does not perform system-level cleanup
 
 As long as the execution context has permission to manage local printers, the deployment will work correctly.

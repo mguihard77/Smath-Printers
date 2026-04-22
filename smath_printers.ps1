@@ -32,7 +32,7 @@ function Main {
     # LANGUAGE AUTO DETECTION
     ###################################################
 
-    $DetectedLang = (Get-Culture).TwoLetterISOLanguageName
+    $DetectedLang   = (Get-Culture).TwoLetterISOLanguageName
     $SupportedLangs = @("fr","en","de","es")
 
     if ($SupportedLangs -contains $DetectedLang) {
@@ -116,9 +116,9 @@ function Main {
     $form.Show()
     $form.Refresh()
 
-    function Set-Progress($Percent,$Text){
-        if ($Percent -lt 0) { $Percent = 0 }
-        if ($Percent -gt 100) { $Percent = 100 }
+    function Set-Progress($Percent, $Text) {
+        if ($Percent -lt 0)   { $Percent = 0 }
+        if ($Percent -gt 100){ $Percent = 100 }
         $progressBar.Value = $Percent
         $label.Text = $Text
         [System.Windows.Forms.Application]::DoEvents()
@@ -141,15 +141,12 @@ function Main {
     Set-Progress 30 $Strings.RemovingPrinters
 
     Get-Printer | Where-Object { $_.Name -like "Stratus*" } | ForEach-Object {
-    $Summary += "Removal : $($_.Name)"
 
-    $port = $_.PortName
-    Remove-Printer -Name $_.Name
+        $Summary += "Removal : $($_.Name)"
 
-    if ($port -like "IP_*") {
-        Remove-PrinterPort -Name $port -ErrorAction SilentlyContinue
+        # SILENT MODE: remove printer only, NEVER touch ports
+        Remove-Printer -Name $_.Name
     }
-}
 
     Start-Sleep 2
 
@@ -160,6 +157,7 @@ function Main {
     Set-Progress 65 $Strings.InstallingPrinters
 
     foreach ($item in $config) {
+
         if ($item.InfPath -and -not (Get-PrinterDriver -Name $item.Driver)) {
             pnputil.exe /add-driver $item.InfPath /install | Out-Null
         }
@@ -168,7 +166,10 @@ function Main {
             Add-PrinterPort -Name $item.Port -PrinterHostAddress $item.IP
         }
 
-        Add-Printer -Name $item.Name -DriverName $item.Driver -PortName $item.Port
+        Add-Printer -Name $item.Name `
+                    -DriverName $item.Driver `
+                    -PortName $item.Port
+
         $Summary += "Installation : $($item.Name)"
 
         if ($item.Type -eq "Sharp") {

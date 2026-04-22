@@ -41,6 +41,7 @@ No registry cleanup, no print spooler manipulation, no state detection.
 
 ## Project Structure
 
+<pre>
 Smath-Printers/
 ├─ smath_printers.ps1        # Main PowerShell script
 ├─ smath_printers.exe        # Compiled executable (optional)
@@ -57,6 +58,7 @@ Smath-Printers/
 │
 ├─ README.md
 └─ LICENSE
+</pre>
 
 ---
 
@@ -122,7 +124,7 @@ Other values are not supported and will be ignored.
 
 PowerShell script
 
-```csv
+```powershell
 .\smath_printers.ps1
 ```
 

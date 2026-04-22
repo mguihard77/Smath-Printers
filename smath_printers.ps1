@@ -1,153 +1,197 @@
 ###################################################
-# SMATH PRINTERS - SCRIPT FINAL STABLE
+# SMATH PRINTERS
 ###################################################
 
-$ErrorActionPreference  = "SilentlyContinue"
-$WarningPreference      = "SilentlyContinue"
-$ProgressPreference     = "SilentlyContinue"
-$ConfirmPreference      = "None"
+function Main {
 
-$Summary = @()
+    $ErrorActionPreference  = "SilentlyContinue"
+    $WarningPreference      = "SilentlyContinue"
+    $ProgressPreference     = "SilentlyContinue"
+    $ConfirmPreference      = "None"
 
-###################################################
-# UI - BARRE DE PROGRESSION
-###################################################
+    $Summary = @()
 
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
+    ###################################################
+    # LOAD WINFORMS
+    ###################################################
 
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Deploiement des imprimantes"
-$form.Size = New-Object System.Drawing.Size(460,120)
-$form.StartPosition = "CenterScreen"
-$form.TopMost = $true
-$form.ControlBox = $false
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
 
-$label = New-Object System.Windows.Forms.Label
-$label.Text = "Initialisation..."
-$label.AutoSize = $true
-$label.Location = New-Object System.Drawing.Point(20,10)
-$form.Controls.Add($label)
+    ###################################################
+    # BASE PATH
+    ###################################################
 
-$progressBar = New-Object System.Windows.Forms.ProgressBar
-$progressBar.Location = New-Object System.Drawing.Point(20,40)
-$progressBar.Size = New-Object System.Drawing.Size(420,20)
-$form.Controls.Add($progressBar)
+    $BasePath = if ($PSScriptRoot) {
+        $PSScriptRoot
+    } else {
+        [System.AppDomain]::CurrentDomain.BaseDirectory
+    }
 
-$form.Show()
-$form.Refresh()
+    ###################################################
+    # LANGUAGE AUTO DETECTION
+    ###################################################
 
-function Set-Progress {
-    param([int]$Percent,[string]$Text)
+    $DetectedLang = (Get-Culture).TwoLetterISOLanguageName
+    $SupportedLangs = @("fr","en","de","es")
 
-    if ($Percent -lt 0)   { $Percent = 0 }
-    if ($Percent -gt 100){ $Percent = 100 }
+    if ($SupportedLangs -contains $DetectedLang) {
+        $Lang = $DetectedLang
+    } else {
+        $Lang = "en"
+    }
 
-    $progressBar.Value = $Percent
-    $label.Text = $Text
-    [System.Windows.Forms.Application]::DoEvents()
-}
+    ###################################################
+    # CHECK LANG FOLDER
+    ###################################################
 
-###################################################
-# VERIFICATION PRESENCE config.csv
-###################################################
+    $LangFolder = Join-Path $BasePath "lang"
 
-Set-Progress 5 "Verification configuration"
+    if (-not (Test-Path $LangFolder)) {
+        $null = [System.Windows.Forms.MessageBox]::Show(
+            "Language folder is missing.`n`nThe 'lang' folder must be present.",
+            "Smath Printers - Error",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
+        return
+    }
 
-$CsvPath = ".\config.csv"
+    $LangFile = Join-Path $LangFolder "$Lang.lang.ps1"
 
-if (-not (Test-Path $CsvPath)) {
+    if (-not (Test-Path $LangFile)) {
+        $LangFile = Join-Path $LangFolder "en.lang.ps1"
+    }
 
-    $null = [System.Windows.Forms.MessageBox]::Show(
-        "Le fichier config.csv est introuvable.`n`nVeuillez verifier qu il est present dans le dossier.",
-        "Smath Printers - Erreur",
-        [System.Windows.Forms.MessageBoxButtons]::OK,
-        [System.Windows.Forms.MessageBoxIcon]::Error
-    )
+    if (-not (Test-Path $LangFile)) {
+        $null = [System.Windows.Forms.MessageBox]::Show(
+            "No valid language file found.",
+            "Smath Printers - Error",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
+        return
+    }
 
-    $form.Close()
-    :Exit(1)
-}
+    . $LangFile
 
-###################################################
-# LECTURE DU CSV (lignes valides uniquement)
-###################################################
+    ###################################################
+    # CHECK CSV
+    ###################################################
 
-Set-Progress 10 "Chargement configuration"
-$config = Import-Csv $CsvPath | Where-Object {
-    $_.Name -and $_.Name.Trim() -ne ""
-}
+    $CsvPath = Join-Path $BasePath "config.csv"
 
-###################################################
-# SUPPRESSION DES IMPRIMANTES + PORTS
-###################################################
+    if (-not (Test-Path $CsvPath)) {
+        $null = [System.Windows.Forms.MessageBox]::Show(
+            $Strings.ConfigMissingMessage,
+            $Strings.ConfigMissingTitle,
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        )
+        return
+    }
 
-Set-Progress 30 "Suppression anciennes imprimantes"
+    ###################################################
+    # UI
+    ###################################################
 
-Get-Printer | Where-Object { $_.Name -like "Stratus*" } | ForEach-Object {
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = $Strings.AppTitle
+    $form.Size = New-Object System.Drawing.Size(460,120)
+    $form.StartPosition = "CenterScreen"
+    $form.TopMost = $true
+    $form.ControlBox = $false
 
-    $Summary += "Suppression : $($_.Name)"
+    $label = New-Object System.Windows.Forms.Label
+    $label.Text = $Strings.Initializing
+    $label.AutoSize = $true
+    $label.Location = New-Object System.Drawing.Point(20,10)
+    $form.Controls.Add($label)
+
+    $progressBar = New-Object System.Windows.Forms.ProgressBar
+    $progressBar.Location = New-Object System.Drawing.Point(20,40)
+    $progressBar.Size = New-Object System.Drawing.Size(420,20)
+    $form.Controls.Add($progressBar)
+
+    $form.Show()
+    $form.Refresh()
+
+    function Set-Progress($Percent,$Text){
+        if ($Percent -lt 0) { $Percent = 0 }
+        if ($Percent -gt 100) { $Percent = 100 }
+        $progressBar.Value = $Percent
+        $label.Text = $Text
+        [System.Windows.Forms.Application]::DoEvents()
+    }
+
+    ###################################################
+    # LOAD CSV
+    ###################################################
+
+    Set-Progress 10 $Strings.LoadingConfig
+
+    $config = Import-Csv $CsvPath | Where-Object {
+        $_.Name -and $_.Name.Trim() -ne ""
+    }
+
+    ###################################################
+    # REMOVE PRINTERS
+    ###################################################
+
+    Set-Progress 30 $Strings.RemovingPrinters
+
+    Get-Printer | Where-Object { $_.Name -like "Stratus*" } | ForEach-Object {
+    $Summary += "Removal : $($_.Name)"
 
     $port = $_.PortName
     Remove-Printer -Name $_.Name
 
     if ($port -like "IP_*") {
-        Remove-PrinterPort -Name $port
+        Remove-PrinterPort -Name $port -ErrorAction SilentlyContinue
     }
 }
 
-Start-Sleep -Seconds 2
+    Start-Sleep 2
 
-###################################################
-# CREATION DES IMPRIMANTES (CSV)
-###################################################
+    ###################################################
+    # CREATE PRINTERS
+    ###################################################
 
-Set-Progress 65 "Installation imprimantes"
+    Set-Progress 65 $Strings.InstallingPrinters
 
-foreach ($item in $config) {
+    foreach ($item in $config) {
+        if ($item.InfPath -and -not (Get-PrinterDriver -Name $item.Driver)) {
+            pnputil.exe /add-driver $item.InfPath /install | Out-Null
+        }
 
-    # Installation du driver via INF si fourni
-    if ($item.InfPath -and -not (Get-PrinterDriver -Name $item.Driver)) {
-        pnputil.exe /add-driver $item.InfPath /install | Out-Null
+        if (-not (Get-PrinterPort -Name $item.Port)) {
+            Add-PrinterPort -Name $item.Port -PrinterHostAddress $item.IP
+        }
+
+        Add-Printer -Name $item.Name -DriverName $item.Driver -PortName $item.Port
+        $Summary += "Installation : $($item.Name)"
+
+        if ($item.Type -eq "Sharp") {
+            Get-CimInstance Win32_Printer -Filter "Name='$($item.Name)'" |
+                Set-CimInstance -Property @{ EnableBidi = $false }
+        }
     }
 
-    # Creation du port TCP/IP
-    if (-not (Get-PrinterPort -Name $item.Port)) {
-        Add-PrinterPort -Name $item.Port -PrinterHostAddress $item.IP
-    }
+    ###################################################
+    # FINAL
+    ###################################################
 
-    # Creation brute de l imprimante (comportement original)
-    Add-Printer -Name $item.Name `
-                -DriverName $item.Driver `
-                -PortName $item.Port
+    Set-Progress 100 $Strings.Finalizing
+    $form.Close()
 
-    $Summary += "Installation : $($item.Name)"
-
-    # Option Sharp
-    if ($item.Type -eq "Sharp") {
-        Get-CimInstance Win32_Printer -Filter "Name='$($item.Name)'" |
-            Set-CimInstance -Property @{ EnableBidi = $false }
+    if ($Summary.Count -gt 0) {
+        $null = [System.Windows.Forms.MessageBox]::Show(
+            ($Summary -join "`n"),
+            $Strings.SummaryTitle,
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Information
+        )
     }
 }
 
-###################################################
-# FIN
-###################################################
-
-Set-Progress 100 "Finalisation"
-$form.Close()
-
-###################################################
-# MESSAGE FINAL (UNIQUEMENT SI ACTIONS)
-###################################################
-
-if ($Summary.Count -gt 0) {
-    $null = [System.Windows.Forms.MessageBox]::Show(
-        ($Summary -join "`n"),
-        "Deploiement des imprimantes termine",
-        [System.Windows.Forms.MessageBoxButtons]::OK,
-        [System.Windows.Forms.MessageBoxIcon]::Information
-    )
-}
-
-:Exit(0)
+Main

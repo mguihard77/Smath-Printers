@@ -47,4 +47,3 @@ Name,IP,Port,Driver,InfPath,Type
 Printer_Floor1,192.168.1.10,IP_192.168.1.10,Generic Printer Driver,"\\server\drivers\generic.inf",Generic
 Printer_Floor2,192.168.1.20,IP_192.168.1.20,Generic Printer Driver,,Generic
 Printer_Color,192.168.1.30,IP_192.168.1.30,Microsoft PS Class Driver,,Sharp
-``

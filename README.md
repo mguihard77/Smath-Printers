@@ -6,4 +6,4 @@ Smath Printers is a Powershell based utility to easily deploy printers in your d
 
 With all the issues and limitations encoutered with Microsoft GPO Printers Deployement, this little program allows you to configure your printers in a .csv file then to simply deploy them on your domain computers.
 
-Compilated using <a href="https://github.com/MScholtes/PS2EXE">PS2EXE-GUI</a>
+Compilated using <a href="https://github.com/MScholtes/PS2EXE" target="_blank">PS2EXE-GUI</a>

@@ -1,0 +1,8 @@
+Section,Mode,Value,Name,IP,Port,Driver,InfPath,Type
+REMOVE,PREFIX,Office-Printer_,,,,,,
+REMOVE,EXACT,Old_Printer_Name,,,,,,
+
+Name,IP,Port,Driver,InfPath,Type
+Office_Printer_1,192.168.1.10,IP_192.168.1.10,Xerox Global Print Driver PCL6,"\\server\drivers\xerox\driver.inf",Xerox
+Secure_Print,127.0.0.1,IP_127.0.0.1,Xerox Global Print Driver PCL6,,Print2Me
+Floor2_Printer,192.168.1.30,IP_192.168.1.30,Microsoft PS Class Driver,,Sharp

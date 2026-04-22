@@ -8,6 +8,9 @@ With all the issues and limitations encoutered with Microsoft GPO Printers Deplo
 
 Compilated using <a href="https://github.com/MScholtes/PS2EXE" target="_blank">PS2EXE-GUI</a>
 
+
+---
+
 ## Why Smath-Printers?
 
 Deploying printers through Group Policy Objects can quickly become unreliable:
@@ -44,6 +47,52 @@ Printers are fully defined using a single CSV file named `config.csv`, placed ne
 
 ```csv
 Name,IP,Port,Driver,InfPath,Type
-Printer_Floor1,192.168.1.10,IP_192.168.1.10,Generic Printer Driver,"\\server\drivers\generic.inf",Generic
-Printer_Floor2,192.168.1.20,IP_192.168.1.20,Generic Printer Driver,,Generic
-Printer_Color,192.168.1.30,IP_192.168.1.30,Microsoft PS Class Driver,,Sharp
+Office_Printer_1,192.168.1.10,IP_192.168.1.10,Xerox Global Print Driver PCL6,"\\server\drivers\xerox\driver.inf",Xerox
+Secure_Print,127.0.0.1,IP_127.0.0.1,Xerox Global Print Driver PCL6,,Print2Me
+Floor2_Printer,192.168.1.30,IP_192.168.1.30,Microsoft PS Class Driver,,Sharp
+```
+
+---
+
+## Printer types
+
+Smath-Printers supports a limited set of **predefined printer types**.
+
+These values are not free-form: they are directly mapped to explicit behaviors inside the script. This keeps the deployment logic simple and predictable.
+
+### Supported types
+
+| Type value | Behavior |
+|-----------|----------|
+| `Xerox`   | Standard Xerox printer installation |
+| `Print2Me`| Logical printer using a local TCP/IP port (127.0.0.1) |
+| `Sharp`   | Disables bidirectional support (`EnableBidi = false`) |
+
+Other values are not supported and will be ignored.
+
+---
+
+## Usage
+
+PowerShell script
+
+```csv
+.\smath_printers.ps1
+```
+
+Compiled executable
+
+When compiled as an executable, config.csv must be located in the same directory as the executable.
+
+---
+
+## Permissions
+
+Smath-Printers is designed to run without administrator privileges in standard deployment scenarios.
+The script:
+
+does not restart the print spooler
+does not modify the Windows registry
+does not perform system-level cleanup
+
+As long as the execution context has permission to manage local printers, the deployment will work correctly.
